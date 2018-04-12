@@ -51,8 +51,8 @@ class Trans
 	attr_accessor :appr
 	attr_accessor :auth
 	attr_accessor :error
-	attr_accessor :filetype
 	attr_accessor :filename
+	attr_accessor :filetype
 	attr_accessor :ref
 	attr_accessor :txn
 	attr_accessor :info
@@ -75,15 +75,15 @@ class Trans
 		self.appr = options[:appr]
 		self.auth = options[:auth]
 		self.error = options[:error]
-		self.filetype = options[:filetype]
 		self.filename = options[:filename]
+		self.filetype = options[:filetype]
 		self.ref = options[:ref]
 		self.txn = ""
 		self.info = ""
 		self.authNum = 1
 	end
 	def getTXN()
-		self.txn = "#{self.type},#{self.dob},#{self.date},#{self.time},#{self.emp},#{self.table},#{self.check},#{self.amt},#{self.bam},#{self.tip},#{self.card},#{self.mask},#{self.exp},#{self.appr},#{self.auth},#{self.error},#{self.filetype},#{self.filename},#{self.ref},"
+		self.txn = "#{self.type},#{self.dob},#{self.date},#{self.time},#{self.emp},#{self.table},#{self.check},#{self.amt},#{self.bam},#{self.tip},#{self.card},#{self.mask},#{self.exp},#{self.appr},#{self.auth},#{self.error},#{self.filename},#{self.filetype},#{self.ref},"
 	end
 	def adjustTip(newBAM, newTIP)
 		self.bam = newBAM
@@ -103,7 +103,7 @@ class Trans
 		end
 	end
 	def getSTL()
-		self.txn = "#{self.type},#{self.dob},#{self.date},#{self.time},#{self.info},,,,,,,,,#{self.appr},#{self.auth},#{self.error},#{self.filetype},#{self.filename},#{self.ref}"
+		self.txn = "#{self.type},#{self.dob},#{self.date},#{self.time},#{self.info},,,,,,,,,#{self.appr},#{self.auth},#{self.error},#{self.filename},#{self.filetype},#{self.ref}"
 	end
 #	def checkRef(newRef)
 #		if self.ref == newRef
@@ -143,10 +143,11 @@ end
 a=[]
 b =[]
 s = []
-c = Trans.new("NUM", :type => "TYPE", :dob => "DOB", :date => "DATE", :time => "TIME", :emp => "EMPLOYEE", :table => "TABLE", :check => "CHECK", :amt => "AUTHAMT", :bam => "BATCHAMT", :tip => "BATCHTIP", :card => "CARDTYPE", :mask => "CARDMASK", :exp => "EXP", :appr => "APPROVED", :auth => "AUTH", :error => "ERROR", :filename => "FILETYPE", :filetype => "FILENAME", :ref => "REF")
+c = Trans.new("NUM", :type => "TYPE", :dob => "DOB", :date => "DATE", :time => "TIME", :emp => "EMPLOYEE", :table => "TABLE", :check => "CHECK", :amt => "AUTHAMT", :bam => "BATCHAMT", :tip => "BATCHTIP", :card => "CARDTYPE", :mask => "CARDMASK", :exp => "EXP", :appr => "APPROVED", :auth => "AUTH", :error => "ERROR", :filename => "FILENAME", :filetype => "FILETYPE", :ref => "REF")
 c.getTXN()
 a << c
 b << c
+
 
 auth = 0
 adj = 0
@@ -216,14 +217,16 @@ files = Dir.entries(".")
 decTransFile = File.open("#{dirname}\\DECLINES-all.csv", 'w')
 stlTransFile = File.open("#{dirname}\\SETTLEMENTS-all.csv", 'w')
 allTransFile = File.open("#{dirname}\\STL-DEC-all.csv", 'w')
+perLineFile = File.open("#{dirname}\\data-all.csv", 'w')
 allTransFile.puts "#{header}"
 decTransFile.puts "#{header}"
 stlTransFile.puts "#{header}"
+perLineFile.puts "#{header}"
 
 crunchAll = File.open("#{dirname}\\cards-ALL.csv", 'w')
 files.each do |file|
-	if ( (!File.directory?(file)) && (file =~ /^(\d{8}\.*\d{0,3})\.(\w+)$/i) )
-		dob, ext = $1, $2
+	if ( (!File.directory?(file)) && (file =~ /^((\d{8}\.*\d{0,3})\.(\w+))$/i) )
+		fullName, dob, ext = $1, $2, $3
 		
 		list = File.open(file, 'r')
 		list.each do |line|
@@ -246,7 +249,11 @@ files.each do |file|
 				decl = true
 			elsif line.match(/^END$/)
 				t = Trans.new("#{num}", :type => "#{tran}", :dob => "#{dobT}", :date => "#{dateT}", :time => "#{time}", :emp => "#{emp}", :table => "#{table}", :check => "#{check}", :amt => "#{amt}", :bam => "#{bam}", :tip => "#{tip}", :card => "#{card}", :mask => "#{mask}", :exp => "#{exp}", :appr => "#{appr}", :auth => "#{authorize}", :error => "#{error}", :filename => "", :filetype => "", :ref => "#{ref}")
+				someLine = t
+				someLine.filename = "#{fullName}"
 				if (decl && tran != "")
+					someLine.getTXN()
+					perLineFile.puts "#{someLine.txn}"
 					if (t.isAdjust())
 #					if (tran == "ADJUST")
 						a.each do |refr|
@@ -311,6 +318,8 @@ files.each do |file|
 						end
 					end
 				elsif (tran != "")
+					someLine.getTXN()
+					perLineFile.puts "#{someLine.txn}"
 					if (t.isAdjust())
 #					if (tran == "ADJUST")
 						b.each do |refr|
@@ -380,6 +389,7 @@ files.each do |file|
 							b << t
 						end
 					end
+#					perLineFile.puts "#{t.txn}"
 				end
 				tran = ""
 				dobT = ""
@@ -527,10 +537,10 @@ files.each do |file|
 #			crunch.puts "Total,#{sumBam},#{sumTip},#{sumRef},#{sumTot}"
 			crunchAll.puts "#{dob}.#{ext}, #{s[0].info},#{s[0].dob},#{s[0].date},#{s[0].time}"
 			crunchAll.puts "CardType,Auths,Tips,Refunds,Total,,NumTXNs"
-			crunchAll.puts "AMEX,#{bamA},#{tipA},#{refA},#{sumA},,#{numA}"
 			crunchAll.puts "VISA,#{bamV},#{tipV},#{refV},#{sumV},,#{numV}"
 			crunchAll.puts "MC,#{bamM},#{tipM},#{refM},#{sumM},,#{numM}"
 			crunchAll.puts "DISC,#{bamD},#{tipD},#{refD},#{sumD},,#{numD}"
+			crunchAll.puts "AMEX,#{bamA},#{tipA},#{refA},#{sumA},,#{numA}"
 			crunchAll.puts "Total,#{sumBam},#{sumTip},#{sumRef},#{sumTot},,#{sumNum}"
 			crunchAll.puts ""
 		end
@@ -580,6 +590,7 @@ crunchAll.close()
 decTransFile.close()
 stlTransFile.close()
 allTransFile.close()
+perLineFile.close()
 
 were = "were"
 s = "s"
