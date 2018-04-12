@@ -1,19 +1,17 @@
 #####################################################################################################
-#	This version should run cleaner – closes files after parsing and writing to them				#
+#	Changes v0.3.12: Modified CardType for cards-ALL.csv to include variations for MC and Discover	#
 #																									#
-#	Other changes – creates a DECLINE csv as well as a STL csv for all STL 							#
-#	file extensions (i.e. .A, .B, .C, etc.)															#
+#	Changes v0.3.11: creates a DECLINE folder as well as a SETTLEMENTS folder for each file-type	#
+#																									#
 #	It still does NOT separate by DOB, but instead by filename (i.e. DECLINES_20161230_STL.csv, 	#
 #	stl_20161230_A.csv, etc.)																		#
 #																									#
-#	It should now (somewhat) correctly update an multiple Auths by adding the new amount to the 	#
-#`	original transaction (and is noted how many times in first column)								#
+#	I removed some parts where it tells you if a REF is mismatched by card-mask or Check Number 	#
+#	This should be used with caution since it will not alert the user of this discrepancy			#
+#	NOTE that this is only for Successful authorizations; Declines should function the same			#
 #																									#
-#	Note that by design, if the check number changes but has the same Reference Number, it 			#
-#	creates a new line for that new check.															#
-#	I still need to figure out how to deal with that since it is not always an error…				#
-#	I am considering putting them in one row and adding a “Notes” column at the end where the 		#
-#	old check numbers are appended.																	#
+#	I am still considering adding a “Notes” column at the end where the old check numbers or 		#
+#	credit card masks are appended.																	#
 ######################################################################################################
 
 require 'rubygems'
@@ -24,6 +22,10 @@ exit if Object.const_defined?(:Ocra)
 
 dirname = "stl-csv" #File.dirname("stl-csv")
 FileUtils.mkdir_p(dirname) unless File.directory?(dirname)
+declinesName = "stl-csv\\DECLINES"
+FileUtils.mkdir_p(declinesName) unless File.directory?(declinesName)
+stlName = "stl-csv\\SETTLEMENTS"
+FileUtils.mkdir_p(stlName) unless File.directory?(stlName)
 
 today = DateTime.now
 month = "%02d" % today.month
@@ -305,23 +307,23 @@ files.each do |file|
 #					if (tran == "ADJUST")
 						b.each do |refr|
 							if (refr.ref == ref)
-								if (refr.check == check)
-									if (refr.mask == mask)
+#								if (refr.check == check)
+#									if (refr.mask == mask)
 										refr.adjustTip(bam, tip)
 										refr.getTXN()
 										adjust = true
-									else
-										t.type = "MASK-MISMATCH"
-										t.getTXN()
-										b << t
-										adjust = true
-									end
-								else
-									t.type = "CHECK-MISMATCH"
-									t.getTXN()
-									b << t
-									adjust = true
-								end
+#									else
+#										t.type = "MASK-MISMATCH"
+#										t.getTXN()
+#										b << t
+#										adjust = true
+#									end
+#								else
+#									t.type = "CHECK-MISMATCH"
+#									t.getTXN()
+#									b << t
+#									adjust = true
+#								end
 							end
 						end
 						if (adjust)
@@ -343,23 +345,23 @@ files.each do |file|
 					else
 						b.each do |refr|
 							if (refr.ref == ref)
-								if (refr.check == check)
-									if (refr.mask == mask)
+#								if (refr.check == check)
+#									if (refr.mask == mask)
 										refr.adjustAuth(bam, tip)
 										refr.getTXN()
 										adjust = true
-									else
-										t.type = "MASK-MISMATCH"
-										t.getTXN()
-										b << t
-										adjust = true
-									end
-								else
-									t.type = "CHECK-MISMATCH"
-									t.getTXN()
-									b << t
-									adjust = true
-								end
+#									else
+#										t.type = "MASK-MISMATCH"
+#										t.getTXN()
+#										b << t
+#										adjust = true
+#									end
+#								else
+#									t.type = "CHECK-MISMATCH"
+#									t.getTXN()
+#									b << t
+#									adjust = true
+#								end
 							end
 						end
 						if (adjust)
@@ -407,6 +409,9 @@ files.each do |file|
 					emp = $1
 				elsif line =~ /^\s+TABLE\s+(.+)$/i
 					table = $1
+					if table.include? ','
+						table.sub!(',','')
+					end
 				elsif line =~ /^\s+CHECK\s+(.+)$/i
 					check = $1
 				elsif line =~ /^\s+AUTHAMT\s+(.+)$/i
@@ -435,19 +440,23 @@ files.each do |file|
 			end
 		end
 		if declines > 0
-			entry = File.open("#{dirname}\\DECLINES-stl_#{dob}_#{ext}.csv", 'w')
+			entry = File.open("#{declinesName}\\DECLINES-stl_#{dob}_#{ext}.csv", 'w')
+			allTransFile = File.open("#{dirname}\\DECLINES-all.csv", 'w')
 			a.each do |ax|
 				entry.puts "#{ax.txn}"
 			end
 			entry.close()
+			allTransFile.close()
 		end
 		if auth > 0
-			entry = File.open("#{dirname}\\stl_#{dob}_#{ext}.csv", 'w')
+			entry = File.open("#{stlName}\\stl_#{dob}_#{ext}.csv", 'w')
+			allTransFile = File.open("#{dirname}\\SETTLEMENTS-all.csv", 'w')
 #			crunch = File.open("cards#{dob}.csv", 'w')
 			b.each do |bx|
 				entry.puts "#{bx.txn}"
 			end
 			entry.close()
+			allTransFile.close()
 			b.each do |cx|
 				if cx.card =~ /VISA/i
 					if cx.type == "CREDIT"
@@ -466,7 +475,7 @@ files.each do |file|
 					end
 					numA += 1
 					tipA += cx.tip.to_f
-				elsif cx.card =~ /MASTERCARD/i
+				elsif cx.card =~ /MASTERCARD|MC|M\/C/i
 					if cx.type == "CREDIT"
 						refM += cx.bam.to_f + cx.tip.to_f
 					elsif cx.type != "ADJUST"
@@ -474,7 +483,7 @@ files.each do |file|
 					end
 					numM += 1
 					tipM += cx.tip.to_f
-				elsif cx.card =~ /DISCOVER/i
+				elsif cx.card =~ /DISCOVER|DISC/i
 					if cx.type == "CREDIT"
 						refD += cx.bam.to_f + cx.tip.to_f
 					elsif cx.type != "ADJUST"
@@ -501,10 +510,10 @@ files.each do |file|
 #			crunch.puts "Total,#{sumBam},#{sumTip},#{sumRef},#{sumTot}"
 			crunchAll.puts "#{dob}.#{ext}, #{s[0].info},#{s[0].dob},#{s[0].date},#{s[0].time}"
 			crunchAll.puts "CardType,Auths,Tips,Refunds,Total,,NumTXNs"
-			crunchAll.puts "VISA,#{bamV},#{tipV},#{refV},#{sumV},,#{numV}"
-			crunchAll.puts "MC,#{bamM},#{tipM},#{refM},#{sumM},,#{numM}"
-			crunchAll.puts "DISC,#{bamD},#{tipD},#{refD},#{sumD},,#{numD}"
 			crunchAll.puts "AMEX,#{bamA},#{tipA},#{refA},#{sumA},,#{numA}"
+			crunchAll.puts "VISA,#{bamV},#{tipV},#{refV},#{sumV},,#{numV}"
+			crunchAll.puts "DISC,#{bamD},#{tipD},#{refD},#{sumD},,#{numD}"
+			crunchAll.puts "MC,#{bamM},#{tipM},#{refM},#{sumM},,#{numM}"
 			crunchAll.puts "Total,#{sumBam},#{sumTip},#{sumRef},#{sumTot},,#{sumNum}"
 			crunchAll.puts ""
 		end
