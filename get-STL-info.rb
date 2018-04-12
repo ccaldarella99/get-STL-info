@@ -208,11 +208,18 @@ decl = false
 #wr = false
 hash = {}
 adjust = false
-
+header = "TYPE,DOB,DATE,TIME,EMPLOYEE,TABLE,CHECK,AUTHAMT,BATCHAMT,BATCHTIP,CARDTYPE,CARDMASK,EXP,APPROVED,AUTH,ERROR,FILENAME,FILETYPE,REF,"
 
 
 files = Dir.entries(".")
 #crunchAll = File.open("cards-ALL.csv", 'w')
+decTransFile = File.open("#{dirname}\\DECLINES-all.csv", 'w')
+stlTransFile = File.open("#{dirname}\\SETTLEMENTS-all.csv", 'w')
+allTransFile = File.open("#{dirname}\\STL-DEC-all.csv", 'w')
+allTransFile.puts "#{header}"
+decTransFile.puts "#{header}"
+stlTransFile.puts "#{header}"
+
 crunchAll = File.open("#{dirname}\\cards-ALL.csv", 'w')
 files.each do |file|
 	if ( (!File.directory?(file)) && (file =~ /^(\d{8}\.*\d{0,3})\.(\w+)$/i) )
@@ -443,22 +450,30 @@ files.each do |file|
 		end
 		if declines > 0
 			entry = File.open("#{declinesName}\\DECLINES-stl_#{dob}_#{ext}.csv", 'w')
-			allTransFile = File.open("#{dirname}\\DECLINES-all.csv", 'w')
 			a.each do |ax|
-				entry.puts "#{ax.txn}"
+				if ax.txn =~ /^TYPE,DOB,DATE.+/
+					entry.puts "#{ax.txn}"
+				else
+					entry.puts "#{ax.txn}"
+					decTransFile.puts "#{ax.txn}"
+					allTransFile.puts "#{ax.txn}"
+				end
 			end
 			entry.close()
-			allTransFile.close()
 		end
 		if auth > 0
 			entry = File.open("#{stlName}\\stl_#{dob}_#{ext}.csv", 'w')
-			allTransFile = File.open("#{dirname}\\SETTLEMENTS-all.csv", 'w')
 #			crunch = File.open("cards#{dob}.csv", 'w')
 			b.each do |bx|
-				entry.puts "#{bx.txn}"
+				if bx.txn =~ /^TYPE,DOB,DATE.+/
+					entry.puts "#{bx.txn}"
+				else
+					entry.puts "#{bx.txn}"
+					stlTransFile.puts "#{bx.txn}"
+					allTransFile.puts "#{bx.txn}"
+				end
 			end
 			entry.close()
-			allTransFile.close()
 			b.each do |cx|
 				if cx.card =~ /VISA/i
 					if cx.type == "CREDIT"
@@ -512,10 +527,10 @@ files.each do |file|
 #			crunch.puts "Total,#{sumBam},#{sumTip},#{sumRef},#{sumTot}"
 			crunchAll.puts "#{dob}.#{ext}, #{s[0].info},#{s[0].dob},#{s[0].date},#{s[0].time}"
 			crunchAll.puts "CardType,Auths,Tips,Refunds,Total,,NumTXNs"
-			crunchAll.puts "DISC,#{bamD},#{tipD},#{refD},#{sumD},,#{numD}"
 			crunchAll.puts "AMEX,#{bamA},#{tipA},#{refA},#{sumA},,#{numA}"
-			crunchAll.puts "MC,#{bamM},#{tipM},#{refM},#{sumM},,#{numM}"
 			crunchAll.puts "VISA,#{bamV},#{tipV},#{refV},#{sumV},,#{numV}"
+			crunchAll.puts "MC,#{bamM},#{tipM},#{refM},#{sumM},,#{numM}"
+			crunchAll.puts "DISC,#{bamD},#{tipD},#{refD},#{sumD},,#{numD}"
 			crunchAll.puts "Total,#{sumBam},#{sumTip},#{sumRef},#{sumTot},,#{sumNum}"
 			crunchAll.puts ""
 		end
@@ -562,6 +577,9 @@ files.each do |file|
 end
 
 crunchAll.close()
+decTransFile.close()
+stlTransFile.close()
+allTransFile.close()
 
 were = "were"
 s = "s"
