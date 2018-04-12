@@ -270,6 +270,7 @@ files.each do |file|
 							a << t
 						end
 					elsif (tran == "SETTLE")
+						t.info = info
 						t.getSTL()
 						s << t
 						a << t
@@ -339,6 +340,7 @@ files.each do |file|
 							end
 						end
 					elsif (tran == "SETTLE")
+						t.info = info
 						t.getSTL()
 						s << t
 						b << t
@@ -463,34 +465,34 @@ files.each do |file|
 						refV += cx.bam.to_f + cx.tip.to_f
 					elsif cx.type != "ADJUST"
 						bamV += cx.bam.to_f
+						numV += 1
+#						puts "#{cx.card}"
+						tipV += cx.tip.to_f
 					end
-					numV += 1
-#					puts "#{cx.card}"
-					tipV += cx.tip.to_f
 				elsif cx.card =~ /AMEX/i
 					if cx.type == "CREDIT"
 						refA += cx.bam.to_f + cx.tip.to_f
 					elsif cx.type != "ADJUST"
 						bamA += cx.bam.to_f
+						numA += 1
+						tipA += cx.tip.to_f
 					end
-					numA += 1
-					tipA += cx.tip.to_f
 				elsif cx.card =~ /MASTERCARD|MC|M\/C/i
 					if cx.type == "CREDIT"
 						refM += cx.bam.to_f + cx.tip.to_f
 					elsif cx.type != "ADJUST"
 						bamM += cx.bam.to_f
+						numM += 1
+						tipM += cx.tip.to_f
 					end
-					numM += 1
-					tipM += cx.tip.to_f
 				elsif cx.card =~ /DISCOVER|DISC/i
 					if cx.type == "CREDIT"
 						refD += cx.bam.to_f + cx.tip.to_f
 					elsif cx.type != "ADJUST"
 						bamD += cx.bam.to_f
+						numD += 1
+						tipD += cx.tip.to_f
 					end
-					numD += 1
-					tipD += cx.tip.to_f
 				end
 			end
 			sumV = bamV + tipV
@@ -510,10 +512,10 @@ files.each do |file|
 #			crunch.puts "Total,#{sumBam},#{sumTip},#{sumRef},#{sumTot}"
 			crunchAll.puts "#{dob}.#{ext}, #{s[0].info},#{s[0].dob},#{s[0].date},#{s[0].time}"
 			crunchAll.puts "CardType,Auths,Tips,Refunds,Total,,NumTXNs"
-			crunchAll.puts "AMEX,#{bamA},#{tipA},#{refA},#{sumA},,#{numA}"
-			crunchAll.puts "VISA,#{bamV},#{tipV},#{refV},#{sumV},,#{numV}"
 			crunchAll.puts "DISC,#{bamD},#{tipD},#{refD},#{sumD},,#{numD}"
+			crunchAll.puts "AMEX,#{bamA},#{tipA},#{refA},#{sumA},,#{numA}"
 			crunchAll.puts "MC,#{bamM},#{tipM},#{refM},#{sumM},,#{numM}"
+			crunchAll.puts "VISA,#{bamV},#{tipV},#{refV},#{sumV},,#{numV}"
 			crunchAll.puts "Total,#{sumBam},#{sumTip},#{sumRef},#{sumTot},,#{sumNum}"
 			crunchAll.puts ""
 		end
