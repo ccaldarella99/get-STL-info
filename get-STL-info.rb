@@ -1,18 +1,15 @@
 #####################################################################################################
-#	Changes v0.3.12: Modified CardType for cards-ALL.csv to include variations for MC and Discover	#
+#	Version 0.4.1.4 - Card Summary totals now include Refunds										#
+#					- Card Summary values are now rounded to 2 Decimal places.						#
 #																									#
-#	Changes v0.3.11: creates a DECLINE folder as well as a SETTLEMENTS folder for each file-type	#
-#																									#
-#	It still does NOT separate by DOB, but instead by filename (i.e. DECLINES_20161230_STL.csv, 	#
-#	stl_20161230_A.csv, etc.)																		#
-#																									#
+#	NOTE:																							#
 #	I removed some parts where it tells you if a REF is mismatched by card-mask or Check Number 	#
 #	This should be used with caution since it will not alert the user of this discrepancy			#
 #	NOTE that this is only for Successful authorizations; Declines should function the same			#
 #																									#
 #	I am still considering adding a “Notes” column at the end where the old check numbers or 		#
 #	credit card masks are appended.																	#
-######################################################################################################
+#####################################################################################################
 
 require 'rubygems'
 require 'fileutils'
