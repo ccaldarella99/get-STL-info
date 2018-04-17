@@ -529,6 +529,28 @@ files.each do |file|
 			sumRef = refV + refA + refM +refD
 			sumTot = sumBam + sumTip - sumRef
 			sumNum = numV + numA + numM + numD
+						
+			bamV = "%04.2f" % bamV
+			bamM = "%04.2f" % bamM
+			bamD = "%04.2f" % bamD
+			bamA = "%04.2f" % bamA
+			tipV = "%04.2f" % tipV
+			tipM = "%04.2f" % tipM
+			tipD = "%04.2f" % tipD
+			tipA = "%04.2f" % tipA
+			refV = "%04.2f" % refV
+			refM = "%04.2f" % refM
+			refD = "%04.2f" % refD
+			refA = "%04.2f" % refA
+			sumV = "%04.2f" % sumV
+			sumM = "%04.2f" % sumM
+			sumD = "%04.2f" % sumD
+			sumA = "%04.2f" % sumA
+			sumBam = "%04.2f" % sumBam
+			sumTip = "%04.2f" % sumTip
+			sumRef = "%04.2f" % sumRef
+			sumTot = "%04.2f" % sumTot
+						
 #			crunch.puts "CardType,Auths,Tips,Refunds,Total"
 #			crunch.puts "VISA,#{bamV},#{tipV},#{refV},#{sumV}"
 #			crunch.puts "AMEX,#{bamA},#{tipA},#{refA},#{sumA}"
