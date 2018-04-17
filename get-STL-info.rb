@@ -520,14 +520,14 @@ files.each do |file|
 					end
 				end
 			end
-			sumV = bamV + tipV
-			sumA = bamA + tipA
-			sumM = bamM + tipM
-			sumD = bamD + tipD
+			sumV = bamV + tipV - refV
+			sumA = bamA + tipA - refA
+			sumM = bamM + tipM - refM
+			sumD = bamD + tipD - refD
 			sumBam = bamV + bamA + bamM + bamD
 			sumTip = tipV + tipA + tipM + tipD
 			sumRef = refV + refA + refM +refD
-			sumTot = sumBam + sumTip
+			sumTot = sumBam + sumTip - sumRef
 			sumNum = numV + numA + numM + numD
 #			crunch.puts "CardType,Auths,Tips,Refunds,Total"
 #			crunch.puts "VISA,#{bamV},#{tipV},#{refV},#{sumV}"
